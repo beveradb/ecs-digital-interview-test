@@ -30,12 +30,32 @@ is still deciding various things! As such, they're pretty much designing the dat
 and application architecture on the fly - a situation where handling migrations well
 is essential!
 
+##### Language Choice
+All of the languages allowed by the test requirements are more than capable for this purpose.
+However, for a standalone script intended for execution as part of the software 
+development lifecycle, I wanted something both:
+1. Feature-rich, so I'm not reinventing the wheel too much and implementing my own 
+   SQL client or pattern matching from scratch.
+2. Portable, so the script can be useful to devs working from different operating systems.
+
+Now, I've written my fair share of Bash scripts and they have their place, but shell 
+scripting in general doesn't actually meet either of these requirements, so these 
+should be avoided for anything more complex than system-specific automation tasks.
+
+Between the three fully featured languages, Python has a clear advantage in portability,
+as it is available out of the box in all major Linux distributions and on macOS.
+It is also fairly common to see Python scripts in SDLC tooling alongside a codebase 
+in another language, whereas choosing PHP or Ruby would be unusual unless the application
+itself was built in one of those languages.
+
+### Implementation
+
 ##### MySQL database, example SQL scripts
 I set up a MySQL database on a remote host to run these on (ignoring SDLC best 
 practices - for now this fictional dev team are deploying changes directly to production!),
 and began creating SQL scripts to support the fictional scenario described above.
 
-I tweaked the scripts until there was a working set of migrations simulating the 
+The scripts were then tweaked until there was a working set of migrations simulating the 
 progressive design and creation of a handful of semi-realistic tables:
 
 ![Schema Diagram](https://raw.githubusercontent.com/beveradb/ecs-digital-interview-test/master/schema-diagram.jpg "Schema Diagram")
