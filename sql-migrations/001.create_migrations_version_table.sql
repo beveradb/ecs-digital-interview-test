@@ -4,4 +4,3 @@ CREATE TABLE IF NOT EXISTS versionTable
   PRIMARY KEY (version)
 );
 
-REPLACE INTO versionTable (version) VALUE (1);

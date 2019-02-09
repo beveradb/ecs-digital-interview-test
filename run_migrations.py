@@ -1,4 +1,7 @@
 import logging
+import os
+import pprint
+import re
 import sys
 import types
 
@@ -40,6 +43,13 @@ _default_handler.formatter.format = types.MethodType(
 logger.handlers = [_default_handler]
 
 
+@click.pass_context
+def print_error_help_exit(ctx, message):
+    logger.error(message)
+    click.echo(ctx.get_help())
+    sys.exit(1)
+
+
 @click.group(invoke_without_command=True)
 @click_log.simple_verbosity_option(logger, '--loglevel', '-l')
 @click.version_option()
@@ -52,14 +62,40 @@ logger.handlers = [_default_handler]
 def cli(ctx, migrations_directory, db_user, db_host, db_name, db_password):
     """A cli tool for executing SQL migrations in sequence."""
 
-    logger.debug("CLI executed, TODO: implement functionality")
+    logger.debug("run_migrations CLI execution start")
+    pp = pprint.PrettyPrinter(indent=4)
+
+    migrations = populate_migrations(migrations_directory)
+    pp.pprint(migrations)
 
 
-@click.pass_context
-def print_help_exit(ctx, message):
-    logger.error(message)
-    click.echo(ctx.get_help())
-    sys.exit(1)
+def sort_migrations(migrations):
+    migrations.sort(key=lambda tup: tup[0])
+
+
+def extract_sequence_num(filename):
+    sequence_num = re.search('([0-9]+)[^0-9].+', filename).group(1)
+    return int(sequence_num)
+
+
+def append_migration_to_list(migrations, filename):
+    try:
+        migrations.append((extract_sequence_num(filename), filename))
+    except AttributeError:
+        print_error_help_exit("Invalid filename found: %s" % filename)
+
+
+def find_migrations_in_directory(migrations, migrations_directory):
+    for filename in os.listdir(migrations_directory):
+        if filename.endswith(".sql"):
+            append_migration_to_list(migrations, filename)
+
+
+def populate_migrations(migrations_directory):
+    migrations = []
+    find_migrations_in_directory(migrations, migrations_directory)
+    sort_migrations(migrations)
+    return migrations
 
 
 # Despite using setuptools to provide entry point, retain option for someone

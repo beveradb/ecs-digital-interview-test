@@ -88,3 +88,11 @@ things I'll do before implementing functionality is ensure it is easy to access
 well-formatted debug log entries on demand. As such, I added the click_log library,
 configured it and added my own custom formatter method to add timestamps to each line. 
 
+##### Finding SQL scripts to execute
+To find the SQL scripts in the provided directory, we use a combination of standard library
+methods to iterate through all files ending with the expected ".sql" suffix and apply 
+a regex pattern to extract the sequence number from the start of the filename (regardless 
+of what character is after the number - we just match all numbers at the start of the string).
+We then cast the sequence number to an integer value to make any leading zeros irrelevant,
+and sort the list of SQL scripts by the sequence number to ensure they are processed
+in the correct order.
