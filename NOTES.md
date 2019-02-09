@@ -65,7 +65,6 @@ progressive design and creation of a handful of semi-realistic tables:
 
 ![Schema Diagram](https://raw.githubusercontent.com/beveradb/ecs-digital-interview-test/master/schema-diagram.jpg "Schema Diagram")
 
-
 ##### Filename inconsistency
 To meet the test requirements, I introduced a bit of human error / inconsistency in the 
 filenames, as if these were being created by hand by careless developers.
@@ -74,3 +73,18 @@ happen if the devs were attempting to collaborate in branches without good commu
 any other tooling in their development process).
 The filename patterns aren't consistent either, with a mix of hyphens, underscores, dots 
 and spaces separating parts.
+
+##### CLI Interface
+As this script is designed to be executed from the command line, I wanted it to have
+a robust and user-friendly interface. There's a mature and popular Python library 
+called Click which I've used before, so I put together some boilerplate code and tweaked
+it a bit to expect the parameters defined for this test.
+There's a "help" option to show usage instructions for the script, and the user is 
+shown an informative error message if they don't enter the correct number of arguments.
+
+##### Logging
+I'm a firm believer in robust logging for even simple scripts, so one of the first 
+things I'll do before implementing functionality is ensure it is easy to access 
+well-formatted debug log entries on demand. As such, I added the click_log library,
+configured it and added my own custom formatter method to add timestamps to each line. 
+

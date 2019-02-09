@@ -1,5 +1,6 @@
 import logging
 import sys
+import types
 
 import click
 import click_log
@@ -9,37 +10,32 @@ if sys.version_info > (3, 0):
     print("To use this script you need python 2.x! got %s" % sys.version_info)
     sys.exit(1)
 
-
-class CustomColorFormatter(click_log.ColorFormatter):
-    colors = {
-        'error': dict(fg='red'),
-        'exception': dict(fg='red'),
-        'critical': dict(fg='red'),
-        'info': dict(fg='bright_green'),
-        'debug': dict(fg='blue'),
-        'warning': dict(fg='yellow')
-    }
-
-    def format(self, record):
-        if not record.exc_info:
-            level = record.levelname.lower()
-            msg = record.getMessage()
-
-            prefix = self.formatTime(record, self.datefmt) + " - "
-            if level in self.colors:
-                prefix += click.style('{}: '.format(level),
-                                      **self.colors[level])
-
-            msg = '\n'.join(prefix + x for x in msg.splitlines())
-            return msg
-        return logging.Formatter.format(self, record)
-
-
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
+
+# Monkey-patch click_log ColorFormatter class format method to add timestamps
+def custom_format(self, record):
+    if not record.exc_info:
+        level = record.levelname.lower()
+        msg = record.getMessage()
+
+        prefix = self.formatTime(record, self.datefmt) + " - "
+        if level in self.colors:
+            prefix += click.style('{}: '.format(level),
+                                  **self.colors[level])
+
+        msg = '\n'.join(prefix + x for x in msg.splitlines())
+        return msg
+    return logging.Formatter.format(self, record)
+
+
 _default_handler = ClickHandler()
-_default_handler.formatter = CustomColorFormatter()
+_default_handler.formatter = click_log.ColorFormatter()
+_default_handler.formatter.format = types.MethodType(
+    custom_format,
+    _default_handler.formatter
+)
 
 logger.handlers = [_default_handler]
 
