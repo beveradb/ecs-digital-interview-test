@@ -20,19 +20,28 @@ a simple version number stored in the database itself to track the most recent s
 
 ### Approach
 
-First, I decided to imagine a fictional scenario for the database schema to support, 
-and began creating SQL scripts as if I was part of a small and inexperienced dev team 
+##### Fictional scenario
+To make it easier to make sensible assumptions for this use case, I decided to imagine 
+this was being implemented by a developer who was part of a small and inexperienced team 
 working on a web application for a furniture store.
-Ths fictional dev team aren't sure of all the requirements yet as the store owner
-is still deciding various things, so they're pretty much designing the database schema
+
+Ths fictional dev team aren't sure of all the requirements, yet as the store owner
+is still deciding various things! As such, they're pretty much designing the database schema
 and application architecture on the fly - a situation where handling migrations well
 is essential!
 
-I then set up a MySQL database on a remote host to run these on (ignoring SDLC best 
+##### MySQL database, example SQL scripts
+I set up a MySQL database on a remote host to run these on (ignoring SDLC best 
 practices - for now this fictional dev team are deploying changes directly to production!),
-and tweaked the scripts till I had a working set of migrations simulating the development
-of a handful of semi-realistic tables.
+and began creating SQL scripts to support the fictional scenario described above.
 
+I tweaked the scripts until there was a working set of migrations simulating the 
+progressive design and creation of a handful of semi-realistic tables:
+
+![Schema Diagram](https://raw.githubusercontent.com/beveradb/ecs-digital-interview-test/master/schema-diagram.png "Schema Diagram")
+
+
+##### Filename inconsistency
 To meet the test requirements, I introduced a bit of human error / inconsistency in the 
 filenames, as if these were being created by hand by careless developers.
 They technically all start with a number, but these aren't sequential (which could easily
