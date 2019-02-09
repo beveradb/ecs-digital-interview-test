@@ -1,0 +1,1 @@
+RENAME TABLE object TO item;
