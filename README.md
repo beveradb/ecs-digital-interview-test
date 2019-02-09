@@ -25,8 +25,7 @@ Interview test problem+solution for DevOps Engineer interview process at ECS Dig
 * The information about the database and the directory will be passed 
 through arguments, following this format:
   ```
-  <directory with .sql scripts> <username for the DB> <DB host> <DB name> <DB
-  password>
+  <directory with .sql scripts> <username for the DB> <DB host> <DB name> <DB password>
   ```
  
 
