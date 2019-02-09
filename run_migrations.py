@@ -1,12 +1,12 @@
 import logging
 import os
-import pprint
 import re
 import sys
 import types
 
 import click
 import click_log
+import mysql.connector as mariadb
 from click_log import ClickHandler
 
 if sys.version_info > (3, 0):
@@ -24,9 +24,10 @@ def custom_format(self, record):
         msg = record.getMessage()
 
         prefix = self.formatTime(record, self.datefmt) + " - "
+        level_prefix = '{}: '.format(level)
         if level in self.colors:
-            prefix += click.style('{}: '.format(level),
-                                  **self.colors[level])
+            level_prefix = click.style(level_prefix, **self.colors[level])
+        prefix += level_prefix
 
         msg = '\n'.join(prefix + x for x in msg.splitlines())
         return msg
@@ -62,11 +63,43 @@ def print_error_help_exit(ctx, message):
 def cli(ctx, migrations_directory, db_user, db_host, db_name, db_password):
     """A cli tool for executing SQL migrations in sequence."""
 
-    logger.debug("run_migrations CLI execution start")
-    pp = pprint.PrettyPrinter(indent=4)
-
+    logger.debug("CLI execution start")
     migrations = populate_migrations(migrations_directory)
-    pp.pprint(migrations)
+
+    db_connection = connect_database(db_host, db_user, db_password, db_name)
+    db_cursor = db_connection.cursor()
+    current_db_version = fetch_current_version(db_cursor)
+
+
+    db_connection.close()
+
+
+def fetch_current_version(cursor):
+    cursor.execute("SELECT version FROM versionTable LIMIT 1")
+    current_db_version = cursor.fetchone()
+
+    logger.debug("Current database version: %s" % current_db_version)
+    return current_db_version
+
+
+def connect_database(host, user, password, name):
+    try:
+        logger.debug("Attempting to connect to database with details: "
+                     "user=%s, password=%s, host=%s, database=%s" % (
+                         user,
+                         password,
+                         host,
+                         name
+                     ))
+
+        db_connection = mariadb.connect(user=user,
+                                        password=password,
+                                        host=host,
+                                        database=name)
+        return db_connection
+
+    except mariadb.Error as error:
+        logger.error("Database connection error: %s" % error)
 
 
 def sort_migrations(migrations):

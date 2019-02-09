@@ -7,6 +7,8 @@ setup(
     install_requires=[
         'Click',
         'click_log',
+        'mysql-connector-python',
+        'MySQL-python'
     ],
     entry_points='''
         [console_scripts]
