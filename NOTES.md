@@ -48,6 +48,11 @@ It is also fairly common to see Python scripts in SDLC tooling alongside a codeb
 in another language, whereas choosing PHP or Ruby would be unusual unless the application
 itself was built in one of those languages.
 
+**Note:** The requirements explicitly reference Python 2.7, which is very bad practice 
+now as the entire community is pushing to migrate away from the 2.x branch since 
+it is being retired in less than 10 months (January 2020). I've written this solution
+in Python 2.7 compatible code, but anyone still using it really needs to update now!
+
 ### Implementation
 
 ##### MySQL database, example SQL scripts
