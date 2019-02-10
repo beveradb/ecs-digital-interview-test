@@ -45,23 +45,16 @@ _default_handler.formatter.format = types.MethodType(
 logger.handlers = [_default_handler]
 
 
-@click.pass_context
-def print_error_help_exit(ctx, message):
-    logger.error(message)
-    click.echo(ctx.get_help())
-    sys.exit(1)
-
-
-@click.group(invoke_without_command=True)
-@click_log.simple_verbosity_option(logger, '--loglevel', '-l')
-@click.version_option()
+@click.command()
 @click.argument('sql_directory')
 @click.argument('db_user')
 @click.argument('db_host')
 @click.argument('db_name')
 @click.argument('db_password')
 @click.option('-s', '--single-file', required=False, type=str,
-              help='Filename of single migration script to process.')
+              help='Filename of single SQL script to process.')
+@click_log.simple_verbosity_option(logger, '--loglevel', '-l')
+@click.version_option(None, '-v', '--version')
 def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
     """A cli tool for executing SQL migrations in sequence."""
 
@@ -207,7 +200,8 @@ def append_migration_to_list(migrations, filename):
     try:
         migrations.append((extract_sequence_num(filename), filename))
     except AttributeError:
-        print_error_help_exit("Invalid filename found: {}".format(filename))
+        logger.error("Invalid filename found: {}".format(filename))
+        sys.exit(1)
 
 
 def find_migrations_in_directory(migrations, sql_directory):

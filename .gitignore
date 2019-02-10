@@ -89,6 +89,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+venvthree
 
 # Spyder project settings
 .spyderproject
