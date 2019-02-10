@@ -63,7 +63,7 @@ and began creating SQL scripts to support the fictional scenario described above
 The scripts were then tweaked until there was a working set of migrations simulating the 
 progressive design and creation of a handful of semi-realistic tables:
 
-![Schema Diagram](https://raw.githubusercontent.com/beveradb/ecs-digital-interview-test/master/sql-migrations/schema-diagram.jpg "Schema Diagram")
+![Schema Diagram](https://raw.githubusercontent.com/beveradb/python-sql-migration-runner/master/sql-migrations/schema-diagram.jpg "Schema Diagram")
 
 ##### Filename inconsistency
 To meet the test requirements, I introduced a bit of human error / inconsistency in the 
