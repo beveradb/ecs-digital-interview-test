@@ -10,7 +10,8 @@ import mysql.connector as mariadb
 from click_log import ClickHandler
 
 if sys.version_info > (3, 0):
-    print("To use this script you need python 2.x! got %s" % sys.version_info)
+    print('To use this script you need python 2.x! got {}'
+          .format(sys.version_info))
     sys.exit(1)
 
 logger = logging.getLogger(__name__)
@@ -65,50 +66,58 @@ def cli(ctx, migrations_directory, db_user, db_host, db_name, db_password):
 
     logger.debug("CLI execution start")
     migrations = populate_migrations(migrations_directory)
-    logger.info("Migrations found: %s" % len(migrations))
+    logger.debug("Migrations found: {}"
+                 .format(len(migrations)))
 
     db_connection = connect_database(db_host, db_user, db_password, db_name)
-    db_cursor = db_connection.cursor()
 
-    db_version = fetch_current_version(db_cursor)
-    logger.info("Starting with database version: %s" % db_version)
+    db_version = fetch_current_version(db_connection)
+    logger.info("Starting with database version: {}".format(db_version))
 
     unprocessed = get_unprocessed_migrations(db_version, migrations)
-    logger.info("Migrations to be processed: %s" % len(unprocessed))
+
+    logger.info("Migrations to be processed: {unprocessed} (out of {total})"
+                .format(unprocessed=len(unprocessed), total=len(migrations)))
 
     db_version, total_processed = process_migrations(
-        db_cursor,
+        db_connection,
         db_version,
         unprocessed
     )
 
-    logger.info("Database version now %s after processing %s migrations."
-                % (db_version, total_processed))
+    logger.info("Database version now {version} after processing {processed}"
+                " migrations. {unprocessed} left unprocessed."
+                .format(version=db_version, processed=total_processed,
+                        unprocessed=len(unprocessed)))
 
     db_connection.close()
 
 
-def apply_migration(db_cursor, sql_filename):
+def apply_migration(db_connection, sql_filename):
     with open(sql_filename) as sql_file:
-        db_cursor.execute(sql_file.read().decode('utf-8'), multi=True)
+        cursor = db_connection.cursor()
+        cursor.execute(sql_file.read().decode('utf-8'), multi=True)
+        cursor.close()
 
 
-def process_migrations(db_cursor, db_version, unprocessed_migrations):
+def process_migrations(db_connection, db_version, unprocessed_migrations):
     total_processed = 0
     for version_code, sql_filename in unprocessed_migrations:
-        logger.debug("Applying migration: %s with filename: %s"
-                     % (version_code, sql_filename))
+        logger.debug("Applying migration: {version} with filename: '{file}'"
+                     .format(version=version_code, file=sql_filename))
         try:
-            apply_migration(db_cursor, sql_filename)
+            apply_migration(db_connection, sql_filename)
             logger.info(
-                "Successfully upgraded database to version: %s by "
-                "executing migration in file: %s"
-                % (version_code, sql_filename))
+                "Successfully upgraded database to version: {version} by "
+                "executing migration in file: '{file}'".format(
+                    version=version_code, file=sql_filename)
+            )
+
             db_version = version_code
             total_processed += 1
         except mariadb.Error as error:
-            logger.error("Error while processing migration in file: '%s': "
-                         "%s" % (sql_filename, error))
+            logger.error("Error while processing migration in file: '{file}': "
+                         "{error}".format(file=sql_filename, error=error))
             break
     return db_version, total_processed
 
@@ -117,15 +126,17 @@ def get_unprocessed_migrations(db_version, migrations):
     return filter(lambda tup: tup[0] > db_version, migrations)
 
 
-def fetch_current_version(cursor):
+def fetch_current_version(db_connection):
     current_db_version = 0
     try:
+        cursor = db_connection.cursor()
         cursor.execute("SELECT version FROM versionTable LIMIT 1")
-        current_db_version = cursor.fetchone()
+        current_db_version = cursor.fetchone()[0]
+        cursor.close()
     except mariadb.Error as error:
         logger.error(
-            "Error while attempting to find current database version: %s"
-            % error
+            "Error while attempting to find current database version, assuming"
+            " version 0: {}".format(error)
         )
     return current_db_version
 
@@ -133,12 +144,8 @@ def fetch_current_version(cursor):
 def connect_database(host, user, password, name):
     try:
         logger.debug("Attempting to connect to database with details: "
-                     "user=%s, password=%s, host=%s, database=%s" % (
-                         user,
-                         password,
-                         host,
-                         name
-                     ))
+                     "user={user}, password={password}, host={host}, db={db}"
+                     .format(user=user, password=password, host=host, db=name))
 
         db_connection = mariadb.connect(user=user,
                                         password=password,
@@ -147,7 +154,7 @@ def connect_database(host, user, password, name):
         return db_connection
 
     except mariadb.Error as error:
-        logger.error("Database connection error: %s" % error)
+        logger.error("Database connection error: {}".format(error))
         sys.exit(1)
 
 
@@ -164,7 +171,7 @@ def append_migration_to_list(migrations, filename):
     try:
         migrations.append((extract_sequence_num(filename), filename))
     except AttributeError:
-        print_error_help_exit("Invalid filename found: %s" % filename)
+        print_error_help_exit("Invalid filename found: {}".format(filename))
 
 
 def find_migrations_in_directory(migrations, migrations_directory):
