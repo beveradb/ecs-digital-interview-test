@@ -55,32 +55,42 @@ def print_error_help_exit(ctx, message):
 @click.group(invoke_without_command=True)
 @click_log.simple_verbosity_option(logger, '--loglevel', '-l')
 @click.version_option()
-@click.pass_context
-@click.argument('migrations_directory')
+@click.argument('sql_directory')
 @click.argument('db_user')
 @click.argument('db_host')
 @click.argument('db_name')
 @click.argument('db_password')
-def cli(ctx, migrations_directory, db_user, db_host, db_name, db_password):
+@click.option('-s', '--single-file', required=False, type=str,
+              help='Filename of single migration script to process.')
+def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
     """A cli tool for executing SQL migrations in sequence."""
 
     logger.debug("CLI execution start")
-    migrations = populate_migrations(migrations_directory)
+    db_params = (db_host, db_user, db_password, db_name)
+
+    if single_file is not None:
+        logger.warn("Use of this option means DB version will be out of sync!")
+        apply_migration(db_params, single_file)
+        logger.info(
+            "Successfully executed SQL in file: '{}'".format(single_file)
+        )
+        return
+
+    migrations = populate_migrations(sql_directory)
     logger.debug("Migrations found: {}"
                  .format(len(migrations)))
 
-    db_connection = connect_database(db_host, db_user, db_password, db_name)
-
-    db_version = fetch_current_version(db_connection)
+    db_version = fetch_current_version(db_params)
     logger.info("Starting with database version: {}".format(db_version))
 
     unprocessed = get_unprocessed_migrations(db_version, migrations)
 
-    logger.info("Migrations to be processed: {unprocessed} (out of {total})"
-                .format(unprocessed=len(unprocessed), total=len(migrations)))
+    logger.info(
+        "Migrations yet to be processed: {unprocessed} (out of {total} in dir)"
+            .format(unprocessed=len(unprocessed), total=len(migrations)))
 
     db_version, total_processed = process_migrations(
-        db_connection,
+        db_params,
         db_version,
         unprocessed
     )
@@ -88,32 +98,51 @@ def cli(ctx, migrations_directory, db_user, db_host, db_name, db_password):
     logger.info("Database version now {version} after processing {processed}"
                 " migrations. {unprocessed} left unprocessed."
                 .format(version=db_version, processed=total_processed,
-                        unprocessed=len(unprocessed)))
-
-    db_connection.close()
+                        unprocessed=(len(unprocessed) - total_processed)))
 
 
-def apply_migration(db_connection, sql_filename):
+def apply_migration(db_params, sql_filename):
     with open(sql_filename) as sql_file:
+        db_connection = connect_database(db_params)
         cursor = db_connection.cursor()
         cursor.execute(sql_file.read().decode('utf-8'), multi=True)
-        cursor.close()
+        db_connection.close()
 
 
-def process_migrations(db_connection, db_version, unprocessed_migrations):
+def update_current_version(db_params, new_version):
+    current_db_version = 0
+    try:
+        db_connection = connect_database(db_params)
+        cursor = db_connection.cursor()
+        cursor.execute('UPDATE versionTable SET version = {}'
+                       .format(new_version))
+        cursor.execute("SELECT version FROM versionTable LIMIT 1")
+        db_version_row = cursor.fetchone()
+        if db_version_row is not None:
+            current_db_version = db_version_row[0]
+        db_connection.close()
+    except mariadb.Error as error:
+        logger.error(
+            "Error while attempting to update current database version, "
+            "assuming version 0: {}".format(error)
+        )
+    return current_db_version
+
+
+def process_migrations(db_params, db_version, unprocessed_migrations):
     total_processed = 0
     for version_code, sql_filename in unprocessed_migrations:
         logger.debug("Applying migration: {version} with filename: '{file}'"
                      .format(version=version_code, file=sql_filename))
         try:
-            apply_migration(db_connection, sql_filename)
+            apply_migration(db_params, sql_filename)
             logger.info(
                 "Successfully upgraded database to version: {version} by "
                 "executing migration in file: '{file}'".format(
                     version=version_code, file=sql_filename)
             )
 
-            db_version = version_code
+            db_version = update_current_version(db_params, version_code)
             total_processed += 1
         except mariadb.Error as error:
             logger.error("Error while processing migration in file: '{file}': "
@@ -126,13 +155,14 @@ def get_unprocessed_migrations(db_version, migrations):
     return filter(lambda tup: tup[0] > db_version, migrations)
 
 
-def fetch_current_version(db_connection):
+def fetch_current_version(db_params):
     current_db_version = 0
     try:
+        db_connection = connect_database(db_params)
         cursor = db_connection.cursor()
         cursor.execute("SELECT version FROM versionTable LIMIT 1")
         current_db_version = cursor.fetchone()[0]
-        cursor.close()
+        db_connection.close()
     except mariadb.Error as error:
         logger.error(
             "Error while attempting to find current database version, assuming"
@@ -141,9 +171,10 @@ def fetch_current_version(db_connection):
     return current_db_version
 
 
-def connect_database(host, user, password, name):
+def connect_database(db_params):
     try:
-        logger.debug("Attempting to connect to database with details: "
+        host, user, password, name = db_params
+        logger.debug("Connecting to database with details: "
                      "user={user}, password={password}, host={host}, db={db}"
                      .format(user=user, password=password, host=host, db=name))
 
@@ -174,18 +205,18 @@ def append_migration_to_list(migrations, filename):
         print_error_help_exit("Invalid filename found: {}".format(filename))
 
 
-def find_migrations_in_directory(migrations, migrations_directory):
-    for filename in os.listdir(migrations_directory):
+def find_migrations_in_directory(migrations, sql_directory):
+    for filename in os.listdir(sql_directory):
         if filename.endswith(".sql"):
             append_migration_to_list(
                 migrations,
-                os.path.join(migrations_directory, filename)
+                os.path.join(sql_directory, filename)
             )
 
 
-def populate_migrations(migrations_directory):
+def populate_migrations(sql_directory):
     migrations = []
-    find_migrations_in_directory(migrations, migrations_directory)
+    find_migrations_in_directory(migrations, sql_directory)
     sort_migrations(migrations)
     return migrations
 
