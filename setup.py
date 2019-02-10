@@ -8,7 +8,7 @@ setup(
         'Click',
         'click_log',
         'mysql-connector-python',
-        'MySQL-python'
+        'MySQL-python;python_version<"3"'
     ],
     entry_points='''
         [console_scripts]
