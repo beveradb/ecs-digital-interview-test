@@ -101,9 +101,24 @@ in the correct order.
 We connect to the MySQL database with parameters specified on the command line,
 using the official 'mysql-connector-python' library. Oddly, this library wasn't able 
 to function until the legacy 'MySQL-python' library was also installed.
+
+Despite this connector library being the officially endorsed method of interacting
+with a MySQL/MariaDB database, there are several drawbacks to using this library.
+For one, it is reliant on a native C++ client implementation, so may require certain 
+packages to be installed on the machine running the script, decreasing portability significantly.
+Additionally, I encountered a segfault when using this library from the setuptools entry point.
+I've contributed to the [bug report](https://bugs.mysql.com/bug.php?id=89889#c485226),
+but this doesn't give me a huge amount of confidence in the library.
+
+Unfortunately, all of the alternatives I could find (e.g. PyMySQL, a pure python library)
+don't support executing multiple statements at once, meaning I would be required to
+implement a parser of my own to split statements in the input files and process them
+individually. This sounds like a highly error-prone thing to implement and would likely
+have many edge cases, so I wanted to avoid this if possible.
+
 Initially I attempted to re-use a single connection for the lifetime of the script,
-but found the connection was broken after certain operations (e.g. alter table) were
-executed, so switched to creating and closing the connection for each migration.
+but found the connection was broken after certain operations were executed, 
+so switched to creating and closing the connection for each migration.
 
 ##### Error handling
 As the purpose of this script is to apply schema changes to a database, and in our 

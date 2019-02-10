@@ -9,11 +9,6 @@ import click_log
 import mysql.connector as mariadb
 from click_log import ClickHandler
 
-if sys.version_info > (3, 0):
-    print('To use this script you need python 2.x! got {}'
-          .format(sys.version_info))
-    sys.exit(1)
-
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
@@ -62,8 +57,12 @@ def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
     db_params = (db_host, db_user, db_password, db_name)
 
     if single_file is not None:
-        logger.warn("Use of this option means DB version will be out of sync!")
+        logger.warning(
+            "Use of this option means DB version will be out of sync!"
+        )
+
         apply_migration(db_params, single_file)
+
         logger.info(
             "Successfully executed SQL in file: '{}'".format(single_file)
         )
@@ -102,7 +101,7 @@ def apply_migration(db_params, sql_filename):
     with open(sql_filename) as sql_file:
         db_connection = connect_database(db_params)
         cursor = db_connection.cursor()
-        cursor.execute(sql_file.read().decode('utf-8'), multi=True)
+        cursor.execute(sql_file.read(), multi=True)
         db_connection.close()
 
 
@@ -149,7 +148,7 @@ def process_migrations(db_params, db_version, unprocessed_migrations):
 
 
 def get_unprocessed_migrations(db_version, migrations):
-    return filter(lambda tup: tup[0] > db_version, migrations)
+    return [tup for tup in migrations if tup[0] > db_version]
 
 
 def fetch_current_version(db_params):
