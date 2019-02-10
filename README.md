@@ -1,39 +1,37 @@
-# ecs-digital-interview-test
-Interview test problem+solution for DevOps Engineer interview process at ECS Digital
+# SQL Migrations Runner
+Python script to run SQL migration scripts sequentially from the specified folder,
+updating latest schema version in the database itself in a table named "versionCode".
+
+**Note**: this implementation exists purely as a solution for the ECS Digital technical test.
+
+It almost certainly should **not** be used for any real-world use case, as mature solutions
+exist for almost every use case. See "Problem Overview" section of NOTES for further
+commentary on this topic. 
 
 ------------------------
 
-## Problem Definition
- 
-#### Use Case: 
+## Installation
 
-* A database upgrade requires the execution of numbered scripts stored in a specified folder, e.g. SQL scripts such as `045.createtable.sql`.
-* There may be gaps in the numbering and there isn't always a . (dot) after the number. 
-* The database upgrade is based on looking up the current version in the database and comparing this number to the numbers in the script names. 
-* If the version number from the db matches the highest number from the script then nothing is executed. 
-* If the number from the db is lower than the highest number from the scripts, then all scripts that contain a higher number than the db will be executed against the database. 
-* In addition, the database version table is updated after the install with the highest number. 
+Install the `run_migrations` script with [pip](https://packaging.python.org/tutorials/installing-packages/).
 
+```sh
+$ pip install run_migrations
+```
 
-#### Requirements:
+## Usage
 
-* Supported Languages: Bash, Python2.7, PHP, Shell, Ruby, Powershell
-  * No other languages will be accepted
-* The table where the version is stored is called 'versionTable', and the row with the version is 'version'.
-  * This table contains only one column with the actual version.
-* You will have to use a MySQL database.
-* The information about the database and the directory will be passed 
-through arguments, following this format:
-  ```
-  <directory with .sql scripts> <username for the DB> <DB host> <DB name> <DB password>
-  ```
- 
+Run the `run_migrations` script with `--help` to get usage instructions:
 
-#### Task:
+```
+$ run_migrations --help
 
-How would you implement this in order to create an automated solution to the above requirements?
+Usage: run_migrations [OPTIONS] SQL_DIRECTORY DB_USER DB_HOST DB_NAME DB_PASSWORD
 
-Please send us your script(s) and any associated notes for our review and we will come back to you asap regarding next steps.
+  A cli tool for executing SQL migrations in sequence.
 
-**Important:** the documentation you compile is as important as the quality of the script.
-
+Options:
+  -s, --single-file TEXT  Filename of single SQL script to process.
+  -l, --loglevel LVL      Either CRITICAL, ERROR, WARNING, INFO or DEBUG
+  -v, --version           Show the version and exit.
+  --help                  Show this message and exit.
+```
