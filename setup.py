@@ -10,6 +10,8 @@ setup(
         'mysql-connector-python',
         'MySQL-python;python_version<"3"'
     ],
+    setup_requires=["pytest-runner", "pytest-mock"],
+    tests_require=["pytest", "pytest-mock"],
     entry_points='''
         [console_scripts]
         run_migrations=run_migrations:cli
