@@ -15,7 +15,7 @@ commentary on this topic.
 Install the `run_migrations` script with [pip](https://packaging.python.org/tutorials/installing-packages/).
 
 ```sh
-$ pip install run_migrations
+$ pip install git+git://github.com/beveradb/ecs-digital-interview-test.git
 ```
 
 ## Usage
