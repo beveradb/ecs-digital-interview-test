@@ -96,3 +96,48 @@ of what character is after the number - we just match all numbers at the start o
 We then cast the sequence number to an integer value to make any leading zeros irrelevant,
 and sort the list of SQL scripts by the sequence number to ensure they are processed
 in the correct order.
+
+##### Connection to MySQL database
+We connect to the MySQL database with parameters specified on the command line,
+using the official 'mysql-connector-python' library. Oddly, this library wasn't able 
+to function until the legacy 'MySQL-python' library was also installed.
+Initially I attempted to re-use a single connection for the lifetime of the script,
+but found the connection was broken after certain operations (e.g. alter table) were
+executed, so switched to creating and closing the connection for each migration.
+
+##### Error handling
+As the purpose of this script is to apply schema changes to a database, and in our 
+hypothetical scenario it is likely to be used directly on the production database,
+I wanted it to fail quickly - if anything goes wrong, stop. For example, you don't 
+want to end up accidentally running one migration before the previous in the sequence,
+as this could have unintentionally destructive effects on production data.
+As such; if the database connection fails at any point, we error and exit. If a 
+migration fails to run, we error and exit. If any exceptions are raised at any point,
+we error and exit, displaying a full and informative error message in the console output.
+
+##### Identifying unprocessed migrations
+Once we have a list of all of the migrations in the SQL scripts folder, we fetch
+the current version number from the database and filter the list of migrations to 
+only process those with a higher version number.
+If the 'versionTable' database doesn't exist, or doesn't contain a version row,
+we set the current version to 0 and assume we're starting out with an empty database.
+
+##### Applying migrations
+There is actually very little complexity here at all - we simply open a connection
+to the database, get a cursor reference, and read in the whole SQL file into a single
+execution call. The only thing worth noting here is that in order to execute multiple
+statements in a single call, the "multi" flag must be passed to the execution call.
+This is a feature only added to the Python MySQL connector a few years ago though,
+and there may be some situations where this method of executing all statements in an 
+SQL script doesn't work. There are a variety of alternate methods to choose from 
+though, each with their own pros and cons.
+
+##### Functional testing
+The first thing I did as part of this project was build some example SQL scripts 
+to be executed by this tool, so essentially the functionality was being tested 
+multiple times at every stage of development. To make this more convenient, I added
+a feature to allow executing an arbitrary specified SQL file, and wrote some SQL 
+to drop all tables which may have been created by subsequent script executions.
+I kept this an an additional SQL script in the migrations folder with index 0, as 
+in the hypothetical scenario it could be useful for tearing down/recreating functional
+test environments if the dev team ever decided to create a proper testing pipeline.

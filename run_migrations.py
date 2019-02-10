@@ -86,8 +86,12 @@ def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
     unprocessed = get_unprocessed_migrations(db_version, migrations)
 
     logger.info(
-        "Migrations yet to be processed: {unprocessed} (out of {total} in dir)"
-            .format(unprocessed=len(unprocessed), total=len(migrations)))
+        "Migrations yet to be processed: {unprocessed} (out of {total} "
+        "in dir)".format(
+            unprocessed=len(unprocessed),
+            total=len(migrations)
+        )
+    )
 
     db_version, total_processed = process_migrations(
         db_params,
@@ -96,7 +100,7 @@ def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
     )
 
     logger.info("Database version now {version} after processing {processed}"
-                " migrations. {unprocessed} left unprocessed."
+                " migrations. Remaining: {unprocessed}."
                 .format(version=db_version, processed=total_processed,
                         unprocessed=(len(unprocessed) - total_processed)))
 
@@ -137,9 +141,9 @@ def process_migrations(db_params, db_version, unprocessed_migrations):
         try:
             apply_migration(db_params, sql_filename)
             logger.info(
-                "Successfully upgraded database to version: {version} by "
-                "executing migration in file: '{file}'".format(
-                    version=version_code, file=sql_filename)
+                "Successfully upgraded database from version: {old} to"
+                " {new} by executing migration in file: '{file}'".format(
+                    old=db_version, new=version_code, file=sql_filename)
             )
 
             db_version = update_current_version(db_params, version_code)
@@ -161,7 +165,7 @@ def fetch_current_version(db_params):
         db_connection = connect_database(db_params)
         cursor = db_connection.cursor()
         cursor.execute("SELECT version FROM versionTable LIMIT 1")
-        current_db_version = cursor.fetchone()[0]
+        current_db_version = int(cursor.fetchone()[0])
         db_connection.close()
     except mariadb.Error as error:
         logger.error(
@@ -182,6 +186,7 @@ def connect_database(db_params):
                                         password=password,
                                         host=host,
                                         database=name)
+        db_connection.autocommit = True
         return db_connection
 
     except mariadb.Error as error:

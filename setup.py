@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='run_migrations',
-    version='0.1',
+    version='0.2',
     py_modules=['run_migrations'],
     install_requires=[
         'Click',
