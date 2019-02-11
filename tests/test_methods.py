@@ -1,4 +1,3 @@
-import mock
 import pytest
 
 import run_migrations as r
@@ -131,46 +130,45 @@ def test_sort_migrations_not_versioned_tuples(
         r.sort_migrations(unsorted_migrations_non_versioned_list)
 
 
-def test_populate_migrations_calls_find_migrations(tmpdir):
-    with mock.patch('run_migrations.find_migrations') \
-            as mocked_find_migrations:
-        r.populate_migrations(str(tmpdir))
-        mocked_find_migrations.assert_called_with(str(tmpdir))
+def test_populate_migrations_calls_find_migrations(mocker, tmpdir):
+    mocker.patch('run_migrations.find_migrations')
+
+    r.populate_migrations(str(tmpdir))
+
+    r.find_migrations.assert_called_with(str(tmpdir))
 
 
-def test_populate_migrations_calls_sort_migrations(tmpdir,
+def test_populate_migrations_calls_sort_migrations(mocker,
+                                                   tmpdir,
                                                    sql_filename_expected):
     sql_filename_expected_filepath = tmpdir.join(sql_filename_expected)
     sql_filename_expected_filepath.write("test")
 
-    with mock.patch('run_migrations.sort_migrations') \
-            as mocked_sort_migrations:
-        r.populate_migrations(str(tmpdir))
+    mocker.patch('run_migrations.sort_migrations')
 
-        mocked_sort_migrations.assert_called_with(
-            [(45, sql_filename_expected_filepath)]
-        )
+    r.populate_migrations(str(tmpdir))
+
+    r.sort_migrations.assert_called_with(
+        [(45, sql_filename_expected_filepath)]
+    )
 
 
-def test_connect_database_invalid_params(invalid_db_params):
+def test_connect_database_invalid_params(db_params_tup):
     with pytest.raises(SystemExit):
-        r.connect_database(invalid_db_params)
+        r.connect_database(db_params_tup)
 
 
-def test_connect_database_mariadb_library_called(invalid_db_params):
-    with mock.patch('mysql.connector.connect') as mocked_mysql_connect:
-        r.connect_database(invalid_db_params)
+def test_connect_database_mariadb_library_called(mocker, db_params_tup,
+                                                 db_params_dict):
+    mocker.patch('run_migrations.mysql.connector.connect')
+    r.connect_database(db_params_tup)
 
-        host, user, password, name = invalid_db_params
-        mocked_mysql_connect.assert_called_with(
-            user=user,
-            password=password,
-            host=host,
-            database=name
-        )
+    r.mysql.connector.connect.assert_called_with(**db_params_dict)
 
 
-def test_fetch_current_version_calls_connect(invalid_db_params):
-    with mock.patch('mysql.connector.connect') as mocked_mysql_connect:
-        r.fetch_current_version(invalid_db_params)
-        mocked_mysql_connect.assert_called()
+def test_fetch_current_version_calls_connect(mocker, db_params_tup,
+                                             db_params_dict):
+    mocker.patch('run_migrations.mysql.connector.connect')
+    r.fetch_current_version(db_params_tup)
+
+    r.mysql.connector.connect.assert_called_with(**db_params_dict)

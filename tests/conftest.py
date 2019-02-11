@@ -72,5 +72,20 @@ def unsorted_migrations_non_versioned_list():
 
 
 @pytest.fixture
-def invalid_db_params():
-    return "db_host", "db_user", "db_password", "db_name"
+def db_params_dict():
+    return {
+        "host": "db_host",
+        "user": "db_user",
+        "password": "db_password",
+        "database": "db_name"
+    }
+
+
+@pytest.fixture
+def db_params_tup():
+    return (
+        "db_host",
+        "db_user",
+        "db_password",
+        "db_name"
+    )
