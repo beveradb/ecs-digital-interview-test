@@ -30,7 +30,7 @@ def append_migration(migrations, filename):
         sys.exit(1)
 
 
-def find_migrations_in_directory(sql_directory):
+def find_migrations(sql_directory):
     migrations = []
     for filename in os.listdir(sql_directory):
         if filename.endswith(".sql"):
@@ -42,11 +42,18 @@ def find_migrations_in_directory(sql_directory):
 
 
 def sort_migrations(migrations):
-    migrations.sort(key=lambda tup: tup[0])
+    if (
+            all(isinstance(tup, tuple) for tup in migrations) and
+            all(isinstance(tup[0], int) for tup in migrations) and
+            all(isinstance(tup[1], str) for tup in migrations)
+    ):
+        migrations.sort(key=lambda tup: tup[0])
+    else:
+        raise TypeError("Migrations list did not contain only tuple(int, str)")
 
 
 def populate_migrations(sql_directory):
-    migrations = find_migrations_in_directory(sql_directory)
+    migrations = find_migrations(sql_directory)
     sort_migrations(migrations)
     return migrations
 

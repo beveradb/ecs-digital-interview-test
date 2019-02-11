@@ -65,19 +65,19 @@ def test_append_migration_sql_filename_expected_existing_value(
 def test_find_migrations_expected(tmpdir, sql_filename_expected):
     filepath = tmpdir.join(sql_filename_expected)
     filepath.write("test")
-    migrations = r.find_migrations_in_directory(str(tmpdir))
+    migrations = r.find_migrations(str(tmpdir))
     assert migrations == [(45, str(filepath))]
 
 
 def test_find_migrations_empty(tmpdir):
-    migrations = r.find_migrations_in_directory(str(tmpdir))
+    migrations = r.find_migrations(str(tmpdir))
     assert migrations == []
 
 
 def test_find_migrations_no_suffix(tmpdir, sql_filename_no_sql_suffix):
     filepath = tmpdir.join(sql_filename_no_sql_suffix)
     filepath.write("test")
-    migrations = r.find_migrations_in_directory(str(tmpdir))
+    migrations = r.find_migrations(str(tmpdir))
     assert migrations == []
 
 
@@ -100,7 +100,7 @@ def test_find_migrations_multiple(
     sql_filename_spaced_path = tmpdir.join(sql_filename_spaced)
     sql_filename_spaced_path.write("test")
 
-    migrations = r.find_migrations_in_directory(str(tmpdir))
+    migrations = r.find_migrations(str(tmpdir))
     assert migrations == [
         (45, str(sql_filename_expected_filepath)),
         (23514352834592347502351435283459234750,
@@ -108,3 +108,40 @@ def test_find_migrations_multiple(
         (45, str(sql_filename_spaced_path))
     ]
 
+
+def test_sort_migrations_expected():
+    migrations = [
+        (45, '/tmp/045.createtable.sql'),
+        (2, '/tmp/2-createtable.sql'),
+        (1, '/tmp/001.createtable.sql'),
+        (60, '/tmp/60.createtable.sql'),
+    ]
+    r.sort_migrations(migrations)
+    assert migrations == [
+        (1, '/tmp/001.createtable.sql'),
+        (2, '/tmp/2-createtable.sql'),
+        (45, '/tmp/045.createtable.sql'),
+        (60, '/tmp/60.createtable.sql'),
+    ]
+
+
+def test_sort_migrations_not_tuples():
+    migrations = [
+        '/tmp/045.createtable.sql',
+        '/tmp/2-createtable.sql',
+        '/tmp/001.createtable.sql',
+        '/tmp/60.createtable.sql'
+    ]
+    with pytest.raises(TypeError):
+        r.sort_migrations(migrations)
+
+
+def test_sort_migrations_not_versioned_tuples():
+    migrations = [
+        ('/tmp/045.createtable.sql', 'test'),
+        ('/tmp/2-createtable.sql', 'test'),
+        ('/tmp/001.createtable.sql', 'test'),
+        ('/tmp/60.createtable.sql', 'test')
+    ]
+    with pytest.raises(TypeError):
+        r.sort_migrations(migrations)
