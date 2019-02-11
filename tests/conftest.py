@@ -39,3 +39,4 @@ def sql_filename_bigint():
 @pytest.fixture
 def sql_filename_no_version():
     return "createtable.sql"
+

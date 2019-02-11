@@ -62,8 +62,49 @@ def test_append_migration_sql_filename_expected_existing_value(
                           (45, sql_filename_expected)]
 
 
-def test_find_migrations_in_directory_expected(tmpdir, sql_filename_expected):
+def test_find_migrations_expected(tmpdir, sql_filename_expected):
     filepath = tmpdir.join(sql_filename_expected)
     filepath.write("test")
     migrations = r.find_migrations_in_directory(str(tmpdir))
     assert migrations == [(45, str(filepath))]
+
+
+def test_find_migrations_empty(tmpdir):
+    migrations = r.find_migrations_in_directory(str(tmpdir))
+    assert migrations == []
+
+
+def test_find_migrations_no_suffix(tmpdir, sql_filename_no_sql_suffix):
+    filepath = tmpdir.join(sql_filename_no_sql_suffix)
+    filepath.write("test")
+    migrations = r.find_migrations_in_directory(str(tmpdir))
+    assert migrations == []
+
+
+def test_find_migrations_multiple(
+        tmpdir,
+        sql_filename_expected,
+        sql_filename_bigint,
+        sql_filename_no_sql_suffix,
+        sql_filename_spaced
+):
+    sql_filename_expected_filepath = tmpdir.join(sql_filename_expected)
+    sql_filename_expected_filepath.write("test")
+
+    sql_filename_bigint_filepath = tmpdir.join(sql_filename_bigint)
+    sql_filename_bigint_filepath.write("test")
+
+    sql_filename_no_sql_suffix_path = tmpdir.join(sql_filename_no_sql_suffix)
+    sql_filename_no_sql_suffix_path.write("test")
+
+    sql_filename_spaced_path = tmpdir.join(sql_filename_spaced)
+    sql_filename_spaced_path.write("test")
+
+    migrations = r.find_migrations_in_directory(str(tmpdir))
+    assert migrations == [
+        (45, str(sql_filename_expected_filepath)),
+        (23514352834592347502351435283459234750,
+         str(sql_filename_bigint_filepath)),
+        (45, str(sql_filename_spaced_path))
+    ]
+
