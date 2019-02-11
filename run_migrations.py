@@ -74,7 +74,8 @@ def connect_database(db_params):
 
     except mysql.connector.Error as error:
         logger.error(
-            "{} while connecting to database: {}".format(type(error), error))
+            "{} while connecting to database: {}".format(type(error).__name__,
+                                                         error))
         sys.exit(1)
 
 
@@ -89,7 +90,7 @@ def fetch_current_version(db_params):
     except mysql.connector.Error as error:
         logger.error(
             "{} while attempting to find current database version, assuming"
-            " version 0: {}".format(type(error), error)
+            " version 0: {}".format(type(error).__name__, error)
         )
     return current_db_version
 
@@ -131,7 +132,7 @@ def update_current_version(db_params, new_version):
     except mysql.connector.Error as error:
         logger.error(
             "{} while attempting to update current database version, "
-            "assuming version 0: {}".format(type(error), error)
+            "assuming version 0: {}".format(type(error).__name__, error)
         )
     return current_db_version
 
@@ -154,7 +155,7 @@ def process_migrations(db_params, db_version, unprocessed_migrations):
         except mysql.connector.Error as error:
             logger.error(
                 "{type} while processing migration in file: '{file}': "
-                "{error}".format(type=type(error), file=sql_filename,
+                "{error}".format(type=type(error).__name__, file=sql_filename,
                                  error=error))
             break
     return db_version, total_processed
@@ -188,6 +189,28 @@ def process_migrations_in_directory(db_params, sql_directory):
                         unprocessed=(len(unprocessed) - total_processed)))
 
 
+@click.command()
+@click.argument('sql_directory')
+@click.argument('db_user')
+@click.argument('db_host')
+@click.argument('db_name')
+@click.argument('db_password')
+@click.option('-s', '--single-file', required=False, type=str,
+              help='Filename of single SQL script to process.')
+@click_log.simple_verbosity_option(logger, '--loglevel', '-l')
+@click.version_option(None, '-v', '--version')
+def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
+    """A cli tool for executing SQL migrations in sequence."""
+
+    logger.debug("CLI execution start")
+    db_params = (db_host, db_user, db_password, db_name)
+
+    if single_file is not None:
+        process_single_file(db_params, single_file)
+    else:
+        process_migrations_in_directory(db_params, sql_directory)
+
+
 # Monkey-patch click_log ColorFormatter class format method to add timestamps
 def custom_format(self, record):
     if not record.exc_info:
@@ -213,29 +236,6 @@ _default_handler.formatter.format = types.MethodType(
 )
 
 logger.handlers = [_default_handler]
-
-
-@click.command()
-@click.argument('sql_directory')
-@click.argument('db_user')
-@click.argument('db_host')
-@click.argument('db_name')
-@click.argument('db_password')
-@click.option('-s', '--single-file', required=False, type=str,
-              help='Filename of single SQL script to process.')
-@click_log.simple_verbosity_option(logger, '--loglevel', '-l')
-@click.version_option(None, '-v', '--version')
-def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
-    """A cli tool for executing SQL migrations in sequence."""
-
-    logger.debug("CLI execution start")
-    db_params = (db_host, db_user, db_password, db_name)
-
-    if single_file is not None:
-        process_single_file(db_params, single_file)
-    else:
-        process_migrations_in_directory(db_params, sql_directory)
-
 
 # Despite using setuptools to provide entry point, retain option for someone
 # to also execute this script directly, for convenience.

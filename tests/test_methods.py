@@ -1,4 +1,5 @@
 import pytest
+from click.testing import CliRunner
 from mock import call
 
 import run_migrations as r
@@ -402,3 +403,118 @@ def test_process_migrations_returns_expected(mocker, db_params_tup,
 
     assert db_version == 60
     assert total_processed == 4
+
+
+def test_process_migrations_in_directory_calls_methods(mocker, db_params_tup):
+    mocker.patch('run_migrations.populate_migrations')
+    mocker.patch('run_migrations.fetch_current_version')
+    mocker.patch('run_migrations.get_unprocessed_migrations')
+    mocker.patch('run_migrations.process_migrations')
+
+    r.populate_migrations.return_value = []
+    r.fetch_current_version.return_value = 0
+    r.get_unprocessed_migrations.return_value = []
+    r.process_migrations.return_value = (0, 0)
+
+    r.process_migrations_in_directory(db_params_tup, "")
+
+    r.populate_migrations.assert_called_with("")
+    r.fetch_current_version.assert_called_with(db_params_tup)
+    r.get_unprocessed_migrations.assert_called_with(0, [])
+    r.process_migrations.assert_called_with(db_params_tup, 0, [])
+
+
+def test_process_migrations_in_directory_logs_expected(mocker,
+                                                       db_params_tup):
+    mocker.patch('run_migrations.logger')
+    mocker.patch('run_migrations.populate_migrations')
+    mocker.patch('run_migrations.fetch_current_version')
+    mocker.patch('run_migrations.get_unprocessed_migrations')
+    mocker.patch('run_migrations.process_migrations')
+
+    r.populate_migrations.return_value = []
+    r.fetch_current_version.return_value = 0
+    r.get_unprocessed_migrations.return_value = []
+    r.process_migrations.return_value = (0, 0)
+
+    r.process_migrations_in_directory(db_params_tup, "")
+
+    r.logger.debug.assert_called_with("Migrations found: 0")
+
+    r.logger.info.assert_has_calls([
+        call("Migrations yet to be processed: 0 (out of 0 in dir)"),
+        call("Database version now 0 after processing 0 migrations. "
+             "Remaining: 0.")
+    ], any_order=True)
+
+
+def test_cli_no_arguments():
+    runner = CliRunner()
+    result = runner.invoke(r.cli)
+    assert 'Error: Missing argument' in result.output
+
+
+def test_cli_help():
+    runner = CliRunner()
+    result = runner.invoke(r.cli, ['--help'])
+    assert result.exit_code == 0
+    assert 'Show this message and exit.' in result.output
+
+
+def test_cli_version():
+    runner = CliRunner()
+    result = runner.invoke(r.cli, ['-v'])
+    assert result.exit_code == 0
+    assert ', version' in result.output
+
+
+def test_cli_single_file(mocker, db_params_tup, db_params_dict):
+    mocker.patch('run_migrations.process_single_file')
+
+    runner = CliRunner()
+    runner.invoke(r.cli, [
+        '--single-file',
+        'test.sql',
+        'testdir',
+        db_params_dict['user'],
+        db_params_dict['host'],
+        db_params_dict['database'],
+        db_params_dict['password']
+    ])
+
+    r.process_single_file.assert_called_with(db_params_tup, 'test.sql')
+
+
+def test_cli_directory(mocker, db_params_tup, db_params_dict):
+    mocker.patch('run_migrations.process_migrations_in_directory')
+
+    runner = CliRunner()
+    runner.invoke(r.cli, [
+        'testdir',
+        db_params_dict['user'],
+        db_params_dict['host'],
+        db_params_dict['database'],
+        db_params_dict['password']
+    ])
+
+    r.process_migrations_in_directory.assert_called_with(
+        db_params_tup,
+        'testdir'
+    )
+
+
+def test_cli_loglevel_debug(mocker, db_params_dict):
+    mocker.patch('run_migrations.process_migrations_in_directory')
+
+    runner = CliRunner()
+    result = runner.invoke(r.cli, [
+        '-l',
+        'DEBUG',
+        'testdir',
+        db_params_dict['user'],
+        db_params_dict['host'],
+        db_params_dict['database'],
+        db_params_dict['password']
+    ])
+
+    assert "CLI execution start" in result.output
