@@ -6,7 +6,7 @@ import types
 
 import click
 import click_log
-import mysql.connector as mariadb
+import mysql.connector
 from click_log import ClickHandler
 
 logger = logging.getLogger(__name__)
@@ -58,6 +58,41 @@ def populate_migrations(sql_directory):
     return migrations
 
 
+def connect_database(db_params):
+    try:
+        host, user, password, name = db_params
+        logger.debug("Connecting to database with details: "
+                     "user={user}, password={password}, host={host}, db={db}"
+                     .format(user=user, password=password, host=host, db=name))
+
+        db_connection = mysql.connector.connect(user=user,
+                                                password=password,
+                                                host=host,
+                                                database=name)
+        db_connection.autocommit = True
+        return db_connection
+
+    except mysql.connector.Error as error:
+        logger.error("Database connection error: {}".format(error))
+        sys.exit(1)
+
+
+def fetch_current_version(db_params):
+    current_db_version = 0
+    try:
+        db_connection = connect_database(db_params)
+        cursor = db_connection.cursor()
+        cursor.execute("SELECT version FROM versionTable LIMIT 1")
+        current_db_version = int(cursor.fetchone()[0])
+        db_connection.close()
+    except mysql.connector.Error as error:
+        logger.error(
+            "Error while attempting to find current database version, assuming"
+            " version 0: {}".format(error)
+        )
+    return current_db_version
+
+
 def get_unprocessed_migrations(db_version, migrations):
     return [tup for tup in migrations if tup[0] > db_version]
 
@@ -89,43 +124,14 @@ _default_handler.formatter.format = types.MethodType(
 logger.handlers = [_default_handler]
 
 
-@click.command()
-@click.argument('sql_directory')
-@click.argument('db_user')
-@click.argument('db_host')
-@click.argument('db_name')
-@click.argument('db_password')
-@click.option('-s', '--single-file', required=False, type=str,
-              help='Filename of single SQL script to process.')
-@click_log.simple_verbosity_option(logger, '--loglevel', '-l')
-@click.version_option(None, '-v', '--version')
-def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
-    """A cli tool for executing SQL migrations in sequence."""
-
-    logger.debug("CLI execution start")
-    db_params = (db_host, db_user, db_password, db_name)
-
-    if single_file is not None:
-        logger.warning(
-            "Use of this option means DB version will be out of sync!"
-        )
-
-        apply_migration(db_params, single_file)
-
-        logger.info(
-            "Successfully executed SQL in file: '{}'".format(single_file)
-        )
-        return
-
+def process_migrations_in_directory(db_params, sql_directory):
     migrations = populate_migrations(sql_directory)
-    logger.debug("Migrations found: {}"
-                 .format(len(migrations)))
+    logger.debug("Migrations found: {}".format(len(migrations)))
 
     db_version = fetch_current_version(db_params)
     logger.info("Starting with database version: {}".format(db_version))
 
     unprocessed = get_unprocessed_migrations(db_version, migrations)
-
     logger.info(
         "Migrations yet to be processed: {unprocessed} (out of {total} "
         "in dir)".format(
@@ -144,6 +150,38 @@ def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
                 " migrations. Remaining: {unprocessed}."
                 .format(version=db_version, processed=total_processed,
                         unprocessed=(len(unprocessed) - total_processed)))
+
+
+def process_single_file(db_params, single_file):
+    logger.warning("Use of this option means DB version will be out of sync!")
+
+    apply_migration(db_params, single_file)
+
+    logger.info(
+        "Successfully executed SQL in file: '{}'".format(single_file)
+    )
+
+
+@click.command()
+@click.argument('sql_directory')
+@click.argument('db_user')
+@click.argument('db_host')
+@click.argument('db_name')
+@click.argument('db_password')
+@click.option('-s', '--single-file', required=False, type=str,
+              help='Filename of single SQL script to process.')
+@click_log.simple_verbosity_option(logger, '--loglevel', '-l')
+@click.version_option(None, '-v', '--version')
+def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
+    """A cli tool for executing SQL migrations in sequence."""
+
+    logger.debug("CLI execution start")
+    db_params = (db_host, db_user, db_password, db_name)
+
+    if single_file is not None:
+        process_single_file(db_params, single_file)
+    else:
+        process_migrations_in_directory(db_params, sql_directory)
 
 
 def apply_migration(db_params, sql_filename):
@@ -166,7 +204,7 @@ def update_current_version(db_params, new_version):
         if db_version_row is not None:
             current_db_version = db_version_row[0]
         db_connection.close()
-    except mariadb.Error as error:
+    except mysql.connector.Error as error:
         logger.error(
             "Error while attempting to update current database version, "
             "assuming version 0: {}".format(error)
@@ -189,46 +227,11 @@ def process_migrations(db_params, db_version, unprocessed_migrations):
 
             db_version = update_current_version(db_params, version_code)
             total_processed += 1
-        except mariadb.Error as error:
+        except mysql.connector.Error as error:
             logger.error("Error while processing migration in file: '{file}': "
                          "{error}".format(file=sql_filename, error=error))
             break
     return db_version, total_processed
-
-
-def fetch_current_version(db_params):
-    current_db_version = 0
-    try:
-        db_connection = connect_database(db_params)
-        cursor = db_connection.cursor()
-        cursor.execute("SELECT version FROM versionTable LIMIT 1")
-        current_db_version = int(cursor.fetchone()[0])
-        db_connection.close()
-    except mariadb.Error as error:
-        logger.error(
-            "Error while attempting to find current database version, assuming"
-            " version 0: {}".format(error)
-        )
-    return current_db_version
-
-
-def connect_database(db_params):
-    try:
-        host, user, password, name = db_params
-        logger.debug("Connecting to database with details: "
-                     "user={user}, password={password}, host={host}, db={db}"
-                     .format(user=user, password=password, host=host, db=name))
-
-        db_connection = mariadb.connect(user=user,
-                                        password=password,
-                                        host=host,
-                                        database=name)
-        db_connection.autocommit = True
-        return db_connection
-
-    except mariadb.Error as error:
-        logger.error("Database connection error: {}".format(error))
-        sys.exit(1)
 
 
 # Despite using setuptools to provide entry point, retain option for someone

@@ -8,10 +8,12 @@ setup(
         'Click',
         'click_log',
         'mysql-connector-python',
-        'MySQL-python;python_version<"3"'
+        'MySQL-python;python_version<"3"',
+        'mock',
+        'pytest-mock'
     ],
-    setup_requires=["pytest-runner", "pytest-mock"],
-    tests_require=["pytest", "pytest-mock"],
+    setup_requires=['pytest-runner', 'pytest-mock'],
+    tests_require=['pytest', 'pytest-mock', 'mock'],
     entry_points='''
         [console_scripts]
         run_migrations=run_migrations:cli

@@ -110,15 +110,9 @@ def test_find_migrations_multiple(
     ]
 
 
-def test_sort_migrations_expected():
-    migrations = [
-        (45, '/tmp/045.createtable.sql'),
-        (2, '/tmp/2-createtable.sql'),
-        (1, '/tmp/001.createtable.sql'),
-        (60, '/tmp/60.createtable.sql'),
-    ]
-    r.sort_migrations(migrations)
-    assert migrations == [
+def test_sort_migrations_expected(unsorted_migrations_tuples_list):
+    r.sort_migrations(unsorted_migrations_tuples_list)
+    assert unsorted_migrations_tuples_list == [
         (1, '/tmp/001.createtable.sql'),
         (2, '/tmp/2-createtable.sql'),
         (45, '/tmp/045.createtable.sql'),
@@ -126,26 +120,15 @@ def test_sort_migrations_expected():
     ]
 
 
-def test_sort_migrations_not_tuples():
-    migrations = [
-        '/tmp/045.createtable.sql',
-        '/tmp/2-createtable.sql',
-        '/tmp/001.createtable.sql',
-        '/tmp/60.createtable.sql'
-    ]
+def test_sort_migrations_not_tuples(unsorted_migrations_non_tuple_list):
     with pytest.raises(TypeError):
-        r.sort_migrations(migrations)
+        r.sort_migrations(unsorted_migrations_non_tuple_list)
 
 
-def test_sort_migrations_not_versioned_tuples():
-    migrations = [
-        ('/tmp/045.createtable.sql', 'test'),
-        ('/tmp/2-createtable.sql', 'test'),
-        ('/tmp/001.createtable.sql', 'test'),
-        ('/tmp/60.createtable.sql', 'test')
-    ]
+def test_sort_migrations_not_versioned_tuples(
+        unsorted_migrations_non_versioned_list):
     with pytest.raises(TypeError):
-        r.sort_migrations(migrations)
+        r.sort_migrations(unsorted_migrations_non_versioned_list)
 
 
 def test_populate_migrations_calls_find_migrations(tmpdir):
@@ -167,3 +150,27 @@ def test_populate_migrations_calls_sort_migrations(tmpdir,
         mocked_sort_migrations.assert_called_with(
             [(45, sql_filename_expected_filepath)]
         )
+
+
+def test_connect_database_invalid_params(invalid_db_params):
+    with pytest.raises(SystemExit):
+        r.connect_database(invalid_db_params)
+
+
+def test_connect_database_mariadb_library_called(invalid_db_params):
+    with mock.patch('mysql.connector.connect') as mocked_mysql_connect:
+        r.connect_database(invalid_db_params)
+
+        host, user, password, name = invalid_db_params
+        mocked_mysql_connect.assert_called_with(
+            user=user,
+            password=password,
+            host=host,
+            database=name
+        )
+
+
+def test_fetch_current_version_calls_connect(invalid_db_params):
+    with mock.patch('mysql.connector.connect') as mocked_mysql_connect:
+        r.fetch_current_version(invalid_db_params)
+        mocked_mysql_connect.assert_called()

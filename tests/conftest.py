@@ -40,3 +40,37 @@ def sql_filename_bigint():
 def sql_filename_no_version():
     return "createtable.sql"
 
+
+@pytest.fixture
+def unsorted_migrations_tuples_list():
+    return [
+        (45, '/tmp/045.createtable.sql'),
+        (2, '/tmp/2-createtable.sql'),
+        (1, '/tmp/001.createtable.sql'),
+        (60, '/tmp/60.createtable.sql'),
+    ]
+
+
+@pytest.fixture
+def unsorted_migrations_non_tuple_list():
+    return [
+        '/tmp/045.createtable.sql',
+        '/tmp/2-createtable.sql',
+        '/tmp/001.createtable.sql',
+        '/tmp/60.createtable.sql'
+    ]
+
+
+@pytest.fixture
+def unsorted_migrations_non_versioned_list():
+    return [
+        ('/tmp/045.createtable.sql', 'test'),
+        ('/tmp/2-createtable.sql', 'test'),
+        ('/tmp/001.createtable.sql', 'test'),
+        ('/tmp/60.createtable.sql', 'test')
+    ]
+
+
+@pytest.fixture
+def invalid_db_params():
+    return "db_host", "db_user", "db_password", "db_name"
