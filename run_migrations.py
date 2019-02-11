@@ -13,6 +13,44 @@ logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
 
+def extract_sequence_num(filename):
+    sequence_num = re.search('([0-9]+)[^0-9].+', filename).group(1)
+    return int(sequence_num)
+
+
+def append_migration_to_list(migrations, filename):
+    try:
+        migrations.append((extract_sequence_num(filename), filename))
+    except AttributeError:
+        logger.error("Invalid filename found: {}".format(filename))
+        sys.exit(1)
+
+
+def find_migrations_in_directory(sql_directory):
+    migrations = []
+    for filename in os.listdir(sql_directory):
+        if filename.endswith(".sql"):
+            append_migration_to_list(
+                migrations,
+                os.path.join(sql_directory, filename)
+            )
+    return migrations
+
+
+def sort_migrations(migrations):
+    migrations.sort(key=lambda tup: tup[0])
+
+
+def populate_migrations(sql_directory):
+    migrations = find_migrations_in_directory(sql_directory)
+    sort_migrations(migrations)
+    return migrations
+
+
+def get_unprocessed_migrations(db_version, migrations):
+    return [tup for tup in migrations if tup[0] > db_version]
+
+
 # Monkey-patch click_log ColorFormatter class format method to add timestamps
 def custom_format(self, record):
     if not record.exc_info:
@@ -147,10 +185,6 @@ def process_migrations(db_params, db_version, unprocessed_migrations):
     return db_version, total_processed
 
 
-def get_unprocessed_migrations(db_version, migrations):
-    return [tup for tup in migrations if tup[0] > db_version]
-
-
 def fetch_current_version(db_params):
     current_db_version = 0
     try:
@@ -184,39 +218,6 @@ def connect_database(db_params):
     except mariadb.Error as error:
         logger.error("Database connection error: {}".format(error))
         sys.exit(1)
-
-
-def sort_migrations(migrations):
-    migrations.sort(key=lambda tup: tup[0])
-
-
-def extract_sequence_num(filename):
-    sequence_num = re.search('([0-9]+)[^0-9].+', filename).group(1)
-    return int(sequence_num)
-
-
-def append_migration_to_list(migrations, filename):
-    try:
-        migrations.append((extract_sequence_num(filename), filename))
-    except AttributeError:
-        logger.error("Invalid filename found: {}".format(filename))
-        sys.exit(1)
-
-
-def find_migrations_in_directory(migrations, sql_directory):
-    for filename in os.listdir(sql_directory):
-        if filename.endswith(".sql"):
-            append_migration_to_list(
-                migrations,
-                os.path.join(sql_directory, filename)
-            )
-
-
-def populate_migrations(sql_directory):
-    migrations = []
-    find_migrations_in_directory(migrations, sql_directory)
-    sort_migrations(migrations)
-    return migrations
 
 
 # Despite using setuptools to provide entry point, retain option for someone
