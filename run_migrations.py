@@ -14,11 +14,15 @@ click_log.basic_config(logger)
 
 
 def extract_sequence_num(filename):
-    sequence_num = re.search('([0-9]+)[^0-9].+', filename).group(1)
+    sequence_num = re.search(
+        '([0-9]+)[^0-9].+',
+        os.path.basename(filename)
+    ).group(1)
+
     return int(sequence_num)
 
 
-def append_migration_to_list(migrations, filename):
+def append_migration(migrations, filename):
     try:
         migrations.append((extract_sequence_num(filename), filename))
     except AttributeError:
@@ -30,7 +34,7 @@ def find_migrations_in_directory(sql_directory):
     migrations = []
     for filename in os.listdir(sql_directory):
         if filename.endswith(".sql"):
-            append_migration_to_list(
+            append_migration(
                 migrations,
                 os.path.join(sql_directory, filename)
             )
