@@ -42,7 +42,7 @@ def sql_filename_no_version():
 
 
 @pytest.fixture
-def unsorted_migrations_tuples_list():
+def unsorted_migrations_tuple_list():
     return [
         (45, '/tmp/045.createtable.sql'),
         (2, '/tmp/2-createtable.sql'),
@@ -52,7 +52,17 @@ def unsorted_migrations_tuples_list():
 
 
 @pytest.fixture
-def unsorted_migrations_non_tuple_list():
+def sorted_migrations_tuple_list():
+    return [
+        (1, '/tmp/001.createtable.sql'),
+        (2, '/tmp/2-createtable.sql'),
+        (45, '/tmp/045.createtable.sql'),
+        (60, '/tmp/60.createtable.sql'),
+    ]
+
+
+@pytest.fixture
+def unsorted_migrations_string_list():
     return [
         '/tmp/045.createtable.sql',
         '/tmp/2-createtable.sql',

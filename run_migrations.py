@@ -36,7 +36,7 @@ def find_migrations(sql_directory):
         if filename.endswith(".sql"):
             append_migration(
                 migrations,
-                os.path.join(sql_directory, filename)
+                str(os.path.join(sql_directory, filename))
             )
     return migrations
 
@@ -73,7 +73,8 @@ def connect_database(db_params):
         return db_connection
 
     except mysql.connector.Error as error:
-        logger.error("Database connection error: {}".format(error))
+        logger.error(
+            "{} while connecting to database: {}".format(type(error), error))
         sys.exit(1)
 
 
@@ -87,8 +88,8 @@ def fetch_current_version(db_params):
         db_connection.close()
     except mysql.connector.Error as error:
         logger.error(
-            "Error while attempting to find current database version, assuming"
-            " version 0: {}".format(error)
+            "{} while attempting to find current database version, assuming"
+            " version 0: {}".format(type(error), error)
         )
     return current_db_version
 
@@ -97,31 +98,66 @@ def get_unprocessed_migrations(db_version, migrations):
     return [tup for tup in migrations if tup[0] > db_version]
 
 
-# Monkey-patch click_log ColorFormatter class format method to add timestamps
-def custom_format(self, record):
-    if not record.exc_info:
-        level = record.levelname.lower()
-        msg = record.getMessage()
-
-        prefix = self.formatTime(record, self.datefmt) + " - "
-        level_prefix = '{}: '.format(level)
-        if level in self.colors:
-            level_prefix = click.style(level_prefix, **self.colors[level])
-        prefix += level_prefix
-
-        msg = '\n'.join(prefix + x for x in msg.splitlines())
-        return msg
-    return logging.Formatter.format(self, record)
+def apply_migration(db_params, sql_filename):
+    with open(sql_filename) as sql_file:
+        db_connection = connect_database(db_params)
+        cursor = db_connection.cursor()
+        cursor.execute(sql_file.read(), multi=True)
+        db_connection.close()
 
 
-_default_handler = ClickHandler()
-_default_handler.formatter = click_log.ColorFormatter()
-_default_handler.formatter.format = types.MethodType(
-    custom_format,
-    _default_handler.formatter
-)
+def process_single_file(db_params, single_file):
+    logger.warning("Use of this option means DB version will be out of sync!")
 
-logger.handlers = [_default_handler]
+    apply_migration(db_params, single_file)
+
+    logger.info(
+        "Successfully executed SQL in file: '{}'".format(single_file)
+    )
+
+
+def update_current_version(db_params, new_version):
+    current_db_version = 0
+    try:
+        db_connection = connect_database(db_params)
+        cursor = db_connection.cursor()
+        cursor.execute("UPDATE versionTable SET version = \'{}\'"
+                       .format(new_version))
+        cursor.execute("SELECT version FROM versionTable LIMIT 1")
+        db_version_row = cursor.fetchone()
+        if db_version_row is not None:
+            current_db_version = db_version_row[0]
+        db_connection.close()
+    except mysql.connector.Error as error:
+        logger.error(
+            "{} while attempting to update current database version, "
+            "assuming version 0: {}".format(type(error), error)
+        )
+    return current_db_version
+
+
+def process_migrations(db_params, db_version, unprocessed_migrations):
+    total_processed = 0
+    for version_code, sql_filename in unprocessed_migrations:
+        logger.debug("Applying migration: {version} with filename: '{file}'"
+                     .format(version=version_code, file=sql_filename))
+        try:
+            apply_migration(db_params, sql_filename)
+            logger.info(
+                "Successfully upgraded database from version: {old} to"
+                " {new} by executing migration in file: '{file}'".format(
+                    old=db_version, new=version_code, file=sql_filename)
+            )
+
+            db_version = update_current_version(db_params, version_code)
+            total_processed += 1
+        except mysql.connector.Error as error:
+            logger.error(
+                "{type} while processing migration in file: '{file}': "
+                "{error}".format(type=type(error), file=sql_filename,
+                                 error=error))
+            break
+    return db_version, total_processed
 
 
 def process_migrations_in_directory(db_params, sql_directory):
@@ -152,14 +188,31 @@ def process_migrations_in_directory(db_params, sql_directory):
                         unprocessed=(len(unprocessed) - total_processed)))
 
 
-def process_single_file(db_params, single_file):
-    logger.warning("Use of this option means DB version will be out of sync!")
+# Monkey-patch click_log ColorFormatter class format method to add timestamps
+def custom_format(self, record):
+    if not record.exc_info:
+        level = record.levelname.lower()
+        msg = record.getMessage()
 
-    apply_migration(db_params, single_file)
+        prefix = self.formatTime(record, self.datefmt) + " - "
+        level_prefix = '{}: '.format(level)
+        if level in self.colors:
+            level_prefix = click.style(level_prefix, **self.colors[level])
+        prefix += level_prefix
 
-    logger.info(
-        "Successfully executed SQL in file: '{}'".format(single_file)
-    )
+        msg = '\n'.join(prefix + x for x in msg.splitlines())
+        return msg
+    return logging.Formatter.format(self, record)
+
+
+_default_handler = ClickHandler()
+_default_handler.formatter = click_log.ColorFormatter()
+_default_handler.formatter.format = types.MethodType(
+    custom_format,
+    _default_handler.formatter
+)
+
+logger.handlers = [_default_handler]
 
 
 @click.command()
@@ -182,56 +235,6 @@ def cli(sql_directory, db_user, db_host, db_name, db_password, single_file):
         process_single_file(db_params, single_file)
     else:
         process_migrations_in_directory(db_params, sql_directory)
-
-
-def apply_migration(db_params, sql_filename):
-    with open(sql_filename) as sql_file:
-        db_connection = connect_database(db_params)
-        cursor = db_connection.cursor()
-        cursor.execute(sql_file.read(), multi=True)
-        db_connection.close()
-
-
-def update_current_version(db_params, new_version):
-    current_db_version = 0
-    try:
-        db_connection = connect_database(db_params)
-        cursor = db_connection.cursor()
-        cursor.execute('UPDATE versionTable SET version = {}'
-                       .format(new_version))
-        cursor.execute("SELECT version FROM versionTable LIMIT 1")
-        db_version_row = cursor.fetchone()
-        if db_version_row is not None:
-            current_db_version = db_version_row[0]
-        db_connection.close()
-    except mysql.connector.Error as error:
-        logger.error(
-            "Error while attempting to update current database version, "
-            "assuming version 0: {}".format(error)
-        )
-    return current_db_version
-
-
-def process_migrations(db_params, db_version, unprocessed_migrations):
-    total_processed = 0
-    for version_code, sql_filename in unprocessed_migrations:
-        logger.debug("Applying migration: {version} with filename: '{file}'"
-                     .format(version=version_code, file=sql_filename))
-        try:
-            apply_migration(db_params, sql_filename)
-            logger.info(
-                "Successfully upgraded database from version: {old} to"
-                " {new} by executing migration in file: '{file}'".format(
-                    old=db_version, new=version_code, file=sql_filename)
-            )
-
-            db_version = update_current_version(db_params, version_code)
-            total_processed += 1
-        except mysql.connector.Error as error:
-            logger.error("Error while processing migration in file: '{file}': "
-                         "{error}".format(file=sql_filename, error=error))
-            break
-    return db_version, total_processed
 
 
 # Despite using setuptools to provide entry point, retain option for someone
