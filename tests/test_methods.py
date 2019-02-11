@@ -1,3 +1,4 @@
+import mock
 import pytest
 
 import run_migrations as r
@@ -145,3 +146,24 @@ def test_sort_migrations_not_versioned_tuples():
     ]
     with pytest.raises(TypeError):
         r.sort_migrations(migrations)
+
+
+def test_populate_migrations_calls_find_migrations(tmpdir):
+    with mock.patch('run_migrations.find_migrations') \
+            as mocked_find_migrations:
+        r.populate_migrations(str(tmpdir))
+        mocked_find_migrations.assert_called_with(str(tmpdir))
+
+
+def test_populate_migrations_calls_sort_migrations(tmpdir,
+                                                   sql_filename_expected):
+    sql_filename_expected_filepath = tmpdir.join(sql_filename_expected)
+    sql_filename_expected_filepath.write("test")
+
+    with mock.patch('run_migrations.sort_migrations') \
+            as mocked_sort_migrations:
+        r.populate_migrations(str(tmpdir))
+
+        mocked_sort_migrations.assert_called_with(
+            [(45, sql_filename_expected_filepath)]
+        )
