@@ -113,7 +113,7 @@ class TestHelpers(object):
         sql_filename_spaced_path.write("test")
 
         migrations = helpers.find_migrations(str(tmpdir))
-        
+
         assert ((45, str(sql_filename_expected_filepath)) in migrations)
         assert ((23514352834592347502351435283459234750,
                  str(sql_filename_bigint_filepath)) in migrations)

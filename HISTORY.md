@@ -1,6 +1,11 @@
 History
 =======
 
+0.3.4 (2019-02-12)
+------------------
+
+* Fixed failing test due to list comparison depending on FS order
+
 0.3.3 (2019-02-12)
 ------------------
 
