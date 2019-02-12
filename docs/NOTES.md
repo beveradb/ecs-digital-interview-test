@@ -1,5 +1,5 @@
-
-## Notes
+Notes
+=====
 
 This is where I'll be documenting my own thought process and technical 
 choices while implementing this solution, with review and conclusion once 

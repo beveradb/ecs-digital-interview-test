@@ -1,4 +1,5 @@
-# SQL Migration Runner
+SQL Migration Runner
+======================
 
 [![Latest PyPi Release](https://img.shields.io/pypi/v/migration_runner.svg)](https://pypi.python.org/pypi/migration_runner)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/migration_runner.svg?style=flat)](https://pypi.python.org/pypi/migration_runner)
@@ -11,7 +12,7 @@
 Python script to run SQL migration scripts sequentially from the specified folder,
 updating latest schema version in the database itself after each migration.
 
-**WARNING**: this implementation exists purely as a solution for the ECS Digital technical test.
+**WARNING**: this tool was created purely as a solution for the ECS Digital technical test.
 See [PROBLEM](https://github.com/beveradb/migration_runner/blob/master/PROBLEM.md) 
 for details of the use case and requirements for the task.
 
@@ -34,11 +35,22 @@ for further commentary on this topic.
 
 ## Installation
 
-Install the `migration_runner` script with [pip](https://packaging.python.org/tutorials/installing-packages/).
+To install Migration Runner, run this command in your terminal:
 
-```sh
+``` console
 $ pip install migration_runner
 ```
+
+This is the preferred method to install Migration Runner, as it will
+always install the most recent stable release.
+
+If you don't have [pip](https://pip.pypa.io) installed, this [Python
+installation
+guide](http://docs.python-guide.org/en/latest/starting/installation/)
+can guide you through the process.
+
+For instructions on building from source, see the 
+[documentation](https://migration_runner.readthedocs.io).
 
 ## Usage
 
