@@ -76,8 +76,8 @@ docs: ## generate Sphinx HTML documentation, including API docs
 servedocs: docs ## compile the docs watching for changes
 	watchmedo shell-command -p '*.md' -c '$(MAKE) -C docs html' -R -D .
 
-check-release: ## check documementation will render on PyPI
-    twine check dist/*
+checkrelease: ## check documementation will render on PyPI
+	twine check dist/*
 
 release: dist ## package and upload a release
 	twine upload dist/*
