@@ -4,7 +4,7 @@
 
 __author__ = """Andrew Beveridge"""
 __email__ = 'andrew@beveridge.uk'
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 # flake8: noqa
 from .cli import main
