@@ -2,14 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """The setup script."""
+from os import path
 
 from setuptools import setup, find_packages
-
-with open('README.md') as readme_file:
-    readme = readme_file.read()
-
-with open('HISTORY.md') as history_file:
-    history = history_file.read()
 
 requirements = [
     "Click>=7.0",
@@ -20,6 +15,11 @@ requirements = [
 setup_requirements = ['pytest-runner', ]
 
 test_requirements = ['pytest', 'tox', 'flake8', 'coverage', 'coveralls']
+
+# read the contents of your README file
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md')) as f:
+    long_description = f.read()
 
 setup(
     author="Andrew Beveridge",
@@ -45,7 +45,8 @@ setup(
     },
     install_requires=requirements,
     license="MIT license",
-    long_description=readme + '\n\n' + history,
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     include_package_data=True,
     keywords='migration_runner',
     name='migration_runner',
