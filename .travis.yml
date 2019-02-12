@@ -1,0 +1,22 @@
+language: python
+python:
+- 3.7
+- 3.6
+- 3.5
+- 2.7
+sudo: required
+dist: xenial
+install: pip install -U tox-travis coveralls
+script: tox
+after_success:
+- coveralls
+deploy:
+  provider: pypi
+  distributions: sdist bdist_wheel
+  user: beveradb
+  password:
+    secure: AkTwnhCsSkwan6KG84c59Ca9VBb2OA2OeKBT97VfddpgJSmKHVQ8742g3bcg+XTv5Q523aBoJUTzVuTaX3TyOu/uEts6kah0pEPtHZSW0mZbTVBAlHrjv5ZvTFHS3fVC1oFATteiBPHieXXlMFjn8HaKRX7yHNIpNCe+/ERWuuxLWGYBvz+w2vTsJhGj79lJQqHm4vj2Rl1d6g/IRKlmZdFo9dSl0zaeopQpBzhhX2F1/U6VqDbUETkGBXcroPCbYK2f3OX7sWvHs2Dc5hYCc+OpEs6J/l0Rqus3a8iXhENos1a42Jijb67C15vCpxEM1PdwQGpAU0ePDqYwrThsCUOuCtSapMIkYABj7zRMuxFdRKE6X1mXRem0TySvbEviQ9VyyK5R3biJEmqv3LhZbSMT+4SGjiEyPw9I2mgSbKLkOQe80ZxtM7Z7WZ3PFCZ85TCgdndlCBmTw4Ws4uYXUYoSG9qsjDiF7ciYzHNJQgefhRXGxPiFTf6QC2nzSxEyWJqBHRV0RFpJv2dztmtlBVGBoKQocNrQuKYi4xe5AFySLyA9fjRKujEqKylmSLG17uprKzu+NldUCplWcNTLrBXeM6KaYUpIlijyEJLQ+kstLD1qkE4QliW4mhpkcGmhOf8iSdkOLcZMHwJS1D/BG3lJuu+aEA2Ruq5Be3jWcos=
+  on:
+    tags: true
+    repo: beveradb/migration_runner
+    python: 3.7
