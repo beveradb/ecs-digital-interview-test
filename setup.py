@@ -15,7 +15,6 @@ requirements = [
     "Click>=7.0",
     "click-log>=0.3.2",
     "mysql-connector-python>=8.0.15",
-    'MySQL-python;python_version<"3"',
 ]
 
 setup_requirements = ['pytest-runner', ]

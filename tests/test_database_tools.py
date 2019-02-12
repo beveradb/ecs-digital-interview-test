@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import io
 
 import mysql.connector
 import pytest
@@ -71,14 +72,14 @@ class TestDatabaseTools(object):
         sql_filename_expected
     ):
         mocker.patch('mysql.connector.connect')
-        mocker.patch('builtins.open')
+        mocker.patch('io.open')
 
         filepath = tmpdir.join(sql_filename_expected)
         filepath.write("test")
 
         database_tools.apply_migration(db_params_tup, str(filepath))
 
-        open.assert_called_with(str(filepath))
+        io.open.assert_called_with(str(filepath))
 
     def test_apply_migration_expected_calls_connect(
         self, database_tools, tmpdir, mocker, db_params_tup, db_params_dict,

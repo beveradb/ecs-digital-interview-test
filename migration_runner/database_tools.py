@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import io
 import logging
 import sys
 
@@ -51,7 +52,7 @@ class DatabaseTools:
         return current_db_version
 
     def apply_migration(self, db_params, sql_filename):
-        with open(sql_filename) as sql_file:
+        with io.open(sql_filename) as sql_file:
             db_connection = self.connect_database(db_params)
             cursor = db_connection.cursor()
             cursor.execute(sql_file.read(), multi=True)

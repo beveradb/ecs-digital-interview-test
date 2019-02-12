@@ -57,4 +57,4 @@ class Helpers:
 
     @staticmethod
     def get_unprocessed_migrations(db_version, migrations):
-        return [tup for tup in migrations if tup[0] > db_version]
+        return [tup for tup in migrations if tup[0] > int(db_version)]
