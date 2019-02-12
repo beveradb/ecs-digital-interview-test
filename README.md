@@ -1,6 +1,12 @@
 # SQL Migration Runner
 
-![Supported Python Versions: 2.7, 3.5, 3.6, 3.7](https://img.shields.io/badge/python-2.7%20%7C%203.5%20%7C%203.6%20%7C%203.7-blue.svg)
+[![Latest PyPi Release](https://img.shields.io/pypi/v/migration_runner.svg)](https://pypi.python.org/pypi/migration_runner)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/migration_runner.svg?style=flat)](https://pypi.python.org/pypi/migration_runner)
+[![Build Status](https://img.shields.io/travis/beveradb/migration_runner.svg)](https://travis-ci.org/beveradb/migration_runner)
+[![Documentation Status](https://readthedocs.org/projects/migration_runner/badge/?version=latest)](https://migration_runner.readthedocs.io/en/latest/?badge=latest)
+[![Code Coverage](https://coveralls.io/repos/github/beveradb/migration_runner/badge.svg?branch=master)](https://coveralls.io/github/beveradb/migration_runner?branch=master)
+[![Has Wheel Package](https://img.shields.io/pypi/wheel/migration_runner.svg)](https://pypi.org/project/migration_runner/#files)
+[![Updates](https://pyup.io/repos/github/beveradb/migration_runner/shield.svg)](https://pyup.io/repos/github/beveradb/migration_runner/)
 
 Python script to run SQL migration scripts sequentially from the specified folder,
 updating latest schema version in the database itself after each migration.
