@@ -105,18 +105,18 @@ Before you submit a pull request, check that it meets these guidelines:
     <https://travis-ci.org/beveradb/migration_runner/pull_requests> and
     make sure that the tests pass for all supported Python versions.
 
-# Tips
+## Tips
 
 To run a subset of tests:
 
     $ py.test tests.test_migration_runner
 
-# Deploying
+## Deploying
 
 A reminder for the maintainers on how to deploy. Make sure all your
 changes are committed (including an entry in HISTORY.rst). Then run:
 
-    $ bumpversion patch # possible: major / minor / patch
+    $ bump2version patch # possible: major / minor / patch
     $ git push
     $ git push --tags
 

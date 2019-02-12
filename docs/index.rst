@@ -5,15 +5,15 @@ Welcome to the Migration Runner documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   ../README.md
+   README.md
    INSTALL.md
    USAGE.md
-   modules.rst
-   ../CONTRIBUTING.md
+   API.rst
+   CONTRIBUTING.md
    PROBLEM.md
    NOTES.md
    AUTHORS.md
-   ../HISTORY.md
+   HISTORY.md
 
 Indices and tables
 ==================

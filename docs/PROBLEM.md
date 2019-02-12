@@ -1,5 +1,12 @@
-Problem Definition
-==================
+Original Use Case
+=================
+
+### Context
+
+As mentioned in the README, this tool was originally created purely as a 
+solution for the ECS Digital technical test.
+
+Below are the details of said technical test, as provided by ECS Digital (formerly Forest Technologies).
 
 #### Use Case: 
 
