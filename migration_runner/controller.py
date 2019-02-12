@@ -51,8 +51,9 @@ class Controller:
         total_processed = 0
         for version_code, sql_filename in unprocessed_migrations:
             self.logger.debug(
-                "Applying migration: {version} with filename: '{file}'"
-                    .format(version=version_code, file=sql_filename))
+                "Applying migration: {version} with filename: '{file}'".format
+                (version=version_code, file=sql_filename)
+            )
             try:
                 self.database.apply_migration(db_params, sql_filename)
                 self.logger.info(
@@ -102,6 +103,6 @@ class Controller:
 
         self.logger.info(
             "Database version now {version} after processing {processed}"
-            " migrations. Remaining: {unprocessed}."
-                .format(version=db_version, processed=total_processed,
-                        unprocessed=(len(unprocessed) - total_processed)))
+            " migrations. Remaining: {unprocessed}.".format
+            (version=db_version, processed=total_processed,
+             unprocessed=(len(unprocessed) - total_processed)))
