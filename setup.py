@@ -9,10 +9,10 @@ from setuptools import setup, find_packages
 requirements = [
     "Click>=7.0",
     "click-log>=0.3.2",
-    "mysql-connector-python>=8.0.15",
+    "mysql_connector_python==8.0.15"
 ]
 
-setup_requirements = ['pytest-runner', ]
+setup_requirements = ['pytest-runner', 'callable_pip']
 
 test_requirements = ['pytest', 'tox', 'flake8', 'coverage', 'coveralls']
 
