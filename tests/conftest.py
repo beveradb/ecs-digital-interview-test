@@ -1,4 +1,27 @@
+import logging
 import pytest
+
+from migration_runner import Helpers, DatabaseTools, Controller
+
+
+@pytest.fixture
+def logger():
+    return logging.getLogger(__name__)
+
+
+@pytest.fixture
+def helpers():
+    return Helpers()
+
+
+@pytest.fixture
+def database_tools():
+    return DatabaseTools()
+
+
+@pytest.fixture
+def controller():
+    return Controller()
 
 
 @pytest.fixture

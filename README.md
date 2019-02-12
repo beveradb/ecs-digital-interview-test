@@ -1,4 +1,4 @@
-# SQL Migrations Runner
+# SQL Migration Runner
 
 ![Supported Python Versions: 2.7, 3.5, 3.6, 3.7](https://img.shields.io/badge/python-2.7%20%7C%203.5%20%7C%203.6%20%7C%203.7-blue.svg)
 
@@ -6,11 +6,11 @@ Python script to run SQL migration scripts sequentially from the specified folde
 updating latest schema version in the database itself after each migration.
 
 **WARNING**: this implementation exists purely as a solution for the ECS Digital technical test.
-See [PROBLEM](https://github.com/beveradb/python-sql-migration-runner/blob/master/PROBLEM.md) 
+See [PROBLEM](https://github.com/beveradb/migration_runner/blob/master/PROBLEM.md) 
 for details of the use case and requirements for the task.
 
 It almost certainly should **not** be used for any real-world use case, as mature solutions
-exist for almost every use case. See "Problem Overview" section of [NOTES](https://github.com/beveradb/python-sql-migration-runner/blob/master/NOTES.md) 
+exist for almost every use case. See "Problem Overview" section of [NOTES](https://github.com/beveradb/migration_runner/blob/master/NOTES.md) 
 for further commentary on this topic. 
 
 ------------------------
@@ -19,7 +19,7 @@ for further commentary on this topic.
 
 * Python 2.7, or 3.5+
 * Existing MySQL or MariaDB database, either running locally or on a remote host.
-* Table called `versionTable`, with a single `int(11)` column named "version". See [here](https://github.com/beveradb/python-sql-migration-runner/blob/master/sql-migrations/001.create_migrations_version_table.sql) for schema.
+* Table called `versionTable`, with a single `int(11)` column named "version". See [here](https://github.com/beveradb/migration_runner/blob/master/sql-migrations/001.create_migrations_version_table.sql) for schema.
 * Directory containing SQL scripts to execute to migrate the database to each version.
    * Each migration / version should have one file.
    * Files should be named to match the pattern `VERSION.brief_description.sql`,
@@ -28,20 +28,20 @@ for further commentary on this topic.
 
 ## Installation
 
-Install the `run_migrations` script with [pip](https://packaging.python.org/tutorials/installing-packages/).
+Install the `migration_runner` script with [pip](https://packaging.python.org/tutorials/installing-packages/).
 
 ```sh
-$ pip install git+git://github.com/beveradb/python-sql-migration-runner.git
+$ pip install git+git://github.com/beveradb/migration_runner.git
 ```
 
 ## Usage
 
-Run the `run_migrations` script with `--help` to get usage instructions:
+Run the `migration_runner` script with `--help` to get usage instructions:
 
 ```
-$ run_migrations --help
+$ migration_runner --help
 
-Usage: run_migrations [OPTIONS] SQL_DIRECTORY DB_USER DB_HOST DB_NAME DB_PASSWORD
+Usage: migration_runner [OPTIONS] SQL_DIRECTORY DB_USER DB_HOST DB_NAME DB_PASSWORD
 
   A cli tool for executing SQL migrations in sequence.
 
@@ -56,7 +56,7 @@ Options:
 
 #### Successful usage:
 ```
-$ run_migrations sql-migrations beveradb run_migrations_test.beveradb.tk test_user test_password
+$ migration_runner sql-migrations beveradb migration_runner_test.beveradb.tk test_user test_password
 
 2019-02-10 22:16:30,394 - info: Starting with database version: 0
 2019-02-10 22:16:30,395 - info: Migrations yet to be processed: 10 (out of 11 in dir)
@@ -75,7 +75,7 @@ $ run_migrations sql-migrations beveradb run_migrations_test.beveradb.tk test_us
 
 #### Nothing to process:
 ```
-$ run_migrations sql-migrations test_user beveradb.tk run_migrations_test test_password
+$ migration_runner sql-migrations test_user beveradb.tk migration_runner_test test_password
 
 2019-02-10 22:19:23,252 - info: Starting with database version: 55
 2019-02-10 22:19:23,252 - info: Migrations yet to be processed: 0 (out of 11 in dir)
@@ -84,21 +84,21 @@ $ run_migrations sql-migrations test_user beveradb.tk run_migrations_test test_p
 
 #### Missing argument:
 ```
-$ run_migrations sql-migrations test_user beveradb.tk run_migrations_test
+$ migration_runner sql-migrations test_user beveradb.tk migration_runner_test
 
-Usage: run_migrations [OPTIONS] SQL_DIRECTORY DB_USER DB_HOST DB_NAME
+Usage: migration_runner [OPTIONS] SQL_DIRECTORY DB_USER DB_HOST DB_NAME
                       DB_PASSWORD
-Try "run_migrations --help" for help.
+Try "migration_runner --help" for help.
 
 Error: Missing argument "DB_PASSWORD".
 ```
 
 #### Debug output:
 ```
-$ run_migrations -l DEBUG sql-migrations test_user beveradb.tk run_migrations_test fake_password
+$ migration_runner -l DEBUG sql-migrations test_user beveradb.tk migration_runner_test fake_password
 
 2019-02-10 22:21:48,074 - debug: CLI execution start
 2019-02-10 22:21:48,075 - debug: Migrations found: 11
-2019-02-10 22:21:48,075 - debug: Connecting to database with details: user=test_user, password=fake_password, host=beveradb.tk, db=run_migrations_test
+2019-02-10 22:21:48,075 - debug: Connecting to database with details: user=test_user, password=fake_password, host=beveradb.tk, db=migration_runner_test
 2019-02-10 22:20:37,731 - error: Database connection error: 1045 (28000): Access denied for user 'test_user' (using password: YES)
 ```
