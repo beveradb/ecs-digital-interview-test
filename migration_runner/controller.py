@@ -57,8 +57,8 @@ class Controller:
             try:
                 self.database.apply_migration(db_params, sql_filename)
                 self.logger.info(
-                    "Successfully upgraded database from version: {old} to"
-                    " {new} by executing migration in file: '{file}'".format(
+                    "Upgraded DB version from {old} to {new} by executing file"
+                    ": '{file}'".format(
                         old=db_version, new=version_code, file=sql_filename)
                 )
 

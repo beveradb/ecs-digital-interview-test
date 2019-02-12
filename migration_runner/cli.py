@@ -18,7 +18,7 @@ def custom_format(self, record):
         level = record.levelname.lower()
         msg = record.getMessage()
 
-        prefix = self.formatTime(record, self.datefmt) + " - "
+        prefix = self.formatTime(record, '%Y-%m-%d %H:%M:%S') + " - "
         level_prefix = '{}: '.format(level)
         if level in self.colors:
             level_prefix = click.style(level_prefix, **self.colors[level])
