@@ -1,17 +1,14 @@
-Welcome to Migration Runner's documentation!
-======================================
+Welcome to the documentation for Migration Runner!
+==================================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   readme
    installation
    usage
    modules
    contributing
-   authors
-   history
 
 Indices and tables
 ==================

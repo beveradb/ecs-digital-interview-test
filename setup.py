@@ -19,7 +19,7 @@ requirements = [
 
 setup_requirements = ['pytest-runner', ]
 
-test_requirements = ['pytest', ]
+test_requirements = ['pytest', 'tox', 'flake8', 'coverage']
 
 setup(
     author="Andrew Beveridge",
