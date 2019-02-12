@@ -8,8 +8,7 @@ from setuptools import setup, find_packages
 
 requirements = [
     "Click>=7.0",
-    "click-log>=0.3.2",
-    "mysql_connector_python==8.0.15"
+    "click-log>=0.3.2"
 ]
 
 setup_requirements = ['pytest-runner', 'callable_pip']

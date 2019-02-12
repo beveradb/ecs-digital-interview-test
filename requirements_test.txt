@@ -1,5 +1,7 @@
-callable_pip==1.0.0
 pytest==4.2.0
 pytest-runner==4.2
 pytest-mock==1.10.1
 mock==2.0.0
+Click==7.0
+click-log==0.3.2
+deps/mysql_connector_python-8.0.15-py2.py3-none-any.whl
