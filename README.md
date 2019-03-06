@@ -20,9 +20,7 @@ SQL Migration Runner
 Python script to run SQL migration scripts sequentially from the specified folder,
 updating latest schema version in the database itself after each migration.
 
-**WARNING**: this tool was created purely as a solution for the ECS Digital technical test.
-See [PROBLEM](https://github.com/beveradb/migration_runner/blob/master/docs/PROBLEM.md) 
-for details of the use case and requirements for the task.
+**WARNING**: this tool was created purely as a technical demonstration on request.
 
 It almost certainly should **not** be used for any real-world use case, as mature solutions
 exist for almost every use case. See "Problem Overview" section of [NOTES](https://github.com/beveradb/migration_runner/blob/master/docs/NOTES.md) 
