@@ -3,10 +3,9 @@ Original Use Case
 
 ### Context
 
-As mentioned in the README, this tool was originally created purely as a 
-solution for the ECS Digital technical test.
+As mentioned in the README, this tool was originally created purely as a solution for a technical test.
 
-Below are the details of said technical test, as provided by ECS Digital (formerly Forest Technologies).
+Below are the details of said technical test, as provided by the employer.
 
 #### Use Case: 
 
